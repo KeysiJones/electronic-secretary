@@ -3,44 +3,65 @@ require("dotenv").config();
 const PORT = process.env.PORT || 3001;
 const BASE_URL = process.env.REACT_APP_BASE_URL;
 const BOT_API_KEY = process.env.BOT_API_KEY;
-const cors = require("cors");
 const axios = require("axios");
-
+const DATE_MAP = require("./utils/constants");
 const app = express();
 app.use(express.json());
 app.use(express.static("public"));
 
-app.get("/", function (req, res) {
-  const text = `🏁🚩 Links das Aulas de QUINTA-FEIRA \n
-  📲 Site com TODOS OS LINKS das Aulas 💡 👉 https://instituto-helper.netlify.app 👈\n
-  📡 Site oficial com RECUPERAÇÕES 👉 https://instituto-porto-alegre.webnode.com 👈\n
-  Link da Matrícula 👉 https://forms.gle/D3CYCXJe19PuftgG9 👈\n
-  🕓 16h - 🧑‍🏫ALICERCES DA RESTAURAÇÃO👩‍🏫\nhttps://zoom.us/j/95927244033?pwd=TkZLeU1MY2d5eUpqeTJ5WUJTRHlVUT09\nSenha:1\n
-  🕖 19h - 🧎‍♂️TÓPICOS ATUAIS DO EVANGELHO 🙋‍♂️🗣️\n🔛 https://zoom.us/j/95927244033?pwd=TkZLeU1MY2d5eUpqeTJ5WUJTRHlVUT09\nSenha: 1\n
-  🕗 20h - FOUNDATIONS OF THE RESTAURATION (INGLÊS)  🇬🇧🇺🇸\nhttps://zoom.us/j/93337211696?pwd=dTVreXJLQXFzdVNrTUp0aVpZUzdJUT09\nSenha:1\n
-  🕤 21h30 -💼 PRINCÍPIOS DE LIDERANÇA 🏆\nhttps://zoom.us/j/95927244033?pwd=TkZLeU1MY2d5eUpqeTJ5WUJTRHlVUT09\nSenha:1`;
+app.get("/", async function (req, res, next) {
+  try {
+    const date = new Date();
+    const today = date.getDay();
+    const weekDay = DATE_MAP[today];
 
-  const dateMap = {
-    0: "domingo",
-    1: "segunda",
-    2: "terca",
-    3: "quarta",
-    4: "quinta",
-    5: "sexta",
-    6: "sabado",
-  };
-  const date = new Date();
-  const today = date.getDay();
-  const hour = date.getHours();
-  const weekDay = dateMap[today];
+    if (weekDay === "domingo" || "segunda") {
+      const msg = `Hoje não temos aulas no Instituto, mas eu gostaria de desejar a você uma excelente semana ! 🚀🚀🚀🚀`;
+      const sentMessage = await sendTelegramMessage(msg);
 
-  if (weekDay === "domingo" || "segunda") {
-    return res
-      .status(200)
-      .json({ message: `There are no classes today, server hour: ${hour}` });
+      return res
+        .status(200)
+        .json({ message: `Sent message was: ${sentMessage.text}` });
+    }
+
+    let response = "Error sending Telegram message";
+
+    const classList = await axios.get(BASE_URL);
+    const message = createMessage(classList, weekDay);
+
+    if (message) {
+      const returnedMessage = await sendTelegramMessage(message);
+      if (returnedMessage) response = "Telegram message sent succesfully";
+    }
+
+    return res.status(200).json({ message: response });
+  } catch (error) {
+    next(error);
+  }
+});
+
+const sendTelegramMessage = async (message) => {
+  const params = new URLSearchParams({
+    chat_id: "-641112367",
+    text: message,
+  });
+
+  const sentMessage = await axios.post(
+    `https://api.telegram.org/bot${BOT_API_KEY}/sendMessage`,
+    params.toString()
+  );
+
+  if (!sentMessage) {
+    throw new Error("An error occurred while trying to send telegram message");
   }
 
-  axios.get(BASE_URL).then((response) => {
+  return sentMessage.data.result;
+};
+
+const createMessage = (classList, weekDay) => {
+  const todayClasses = classList.data[weekDay];
+
+  if (todayClasses) {
     const todayMapper = {
       segunda: "SEGUNDA",
       terca: "TERÇA",
@@ -51,13 +72,12 @@ app.get("/", function (req, res) {
       domingo: "DOMINGO",
     };
 
-    const todayClasses = response.data[dateMap[today]];
-    const friendlyToday = todayMapper[dateMap[today]];
+    const friendlyToday = todayMapper[weekDay];
 
     let message = `🏁🚩 Links das Aulas de ${friendlyToday} \n
-    📲 Site com TODOS OS LINKS das Aulas 💡 👉 https://instituto-helper.netlify.app 👈\n
-    📡 Site oficial com RECUPERAÇÕES 👉 https://instituto-porto-alegre.webnode.com 👈\n
-    Link da Matrícula 👉 https://forms.gle/D3CYCXJe19PuftgG9 👈\n`;
+        📲 Site com TODOS OS LINKS das Aulas 💡 👉 https://instituto-helper.netlify.app 👈\n
+        📡 Site oficial com RECUPERAÇÕES 👉 https://instituto-porto-alegre.webnode.com 👈\n
+        Link da Matrícula 👉 https://forms.gle/D3CYCXJe19PuftgG9 👈\n`;
 
     todayClasses.forEach((currentClass) => {
       message += `\n🕓 ${
@@ -65,28 +85,8 @@ app.get("/", function (req, res) {
       } - ${currentClass.nome.toUpperCase()}\n${currentClass.link}\nSenha:1\n`;
     });
 
-    const params = new URLSearchParams({
-      chat_id: "-641112367",
-      text: message,
-    });
+    return message;
+  }
+};
 
-    let resposta;
-
-    axios
-      .post(
-        `https://api.telegram.org/bot${BOT_API_KEY}/sendMessage`,
-        params.toString()
-      )
-      .then((res) => {
-        resposta = res;
-      })
-      .catch((error) => {
-        console.error(error);
-        resposta = error;
-      });
-
-    res.status(200).json({ resposta });
-  });
-});
-
-app.listen(PORT, () => console.log("programa iniciou"));
+app.listen(PORT, () => console.log("Program has started"));
