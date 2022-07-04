@@ -1,8 +1,8 @@
 const express = require("express");
 require("dotenv").config();
 const PORT = process.env.PORT || 3001;
-const BASE_URL = process.env.REACT_APP_BASE_URL
-const BOT_API_KEY = process.env.BOT_API_KEY
+const BASE_URL = process.env.REACT_APP_BASE_URL;
+const BOT_API_KEY = process.env.BOT_API_KEY;
 const cors = require("cors");
 const axios = require("axios");
 
@@ -29,54 +29,64 @@ app.get("/", function (req, res) {
     5: "sexta",
     6: "sabado",
   };
+  const date = new Date();
+  const today = date.getDay();
+  const hour = date.getHours();
+  const weekDay = dateMap[today];
 
-  const today = new Date().getDay();
+  if (weekDay === "domingo" || "segunda") {
+    return res
+      .status(200)
+      .json({ message: `There are no classes today, server hour: ${hour}` });
+  }
 
-  axios
-    .get(BASE_URL)
-    .then((response) => {
-      const todayMapper = {
-        'segunda': 'SEGUNDA',
-        'terca': 'TERÇA',
-        'quarta': 'QUARTA',
-        'quinta': 'QUINTA',
-        'sexta': 'SEXTA',
-        'sabado': 'SÁBADO',
-        'domingo': 'DOMINGO'
-      }
+  axios.get(BASE_URL).then((response) => {
+    const todayMapper = {
+      segunda: "SEGUNDA",
+      terca: "TERÇA",
+      quarta: "QUARTA",
+      quinta: "QUINTA",
+      sexta: "SEXTA",
+      sabado: "SÁBADO",
+      domingo: "DOMINGO",
+    };
 
-      const todayClasses = response.data[dateMap[today]];
-      const friendlyToday = todayMapper[dateMap[today]]
+    const todayClasses = response.data[dateMap[today]];
+    const friendlyToday = todayMapper[dateMap[today]];
 
-      let message = `🏁🚩 Links das Aulas de ${friendlyToday} \n
+    let message = `🏁🚩 Links das Aulas de ${friendlyToday} \n
     📲 Site com TODOS OS LINKS das Aulas 💡 👉 https://instituto-helper.netlify.app 👈\n
     📡 Site oficial com RECUPERAÇÕES 👉 https://instituto-porto-alegre.webnode.com 👈\n
     Link da Matrícula 👉 https://forms.gle/D3CYCXJe19PuftgG9 👈\n`;
 
-      todayClasses.forEach((currentClass) => {
-        message += `\n🕓 ${
-          currentClass.horario
-        } - ${currentClass.nome.toUpperCase()}\n${
-          currentClass.link
-        }\nSenha:1\n`;
+    todayClasses.forEach((currentClass) => {
+      message += `\n🕓 ${
+        currentClass.horario
+      } - ${currentClass.nome.toUpperCase()}\n${currentClass.link}\nSenha:1\n`;
+    });
+
+    const params = new URLSearchParams({
+      chat_id: "-641112367",
+      text: message,
+    });
+
+    let resposta;
+
+    axios
+      .post(
+        `https://api.telegram.org/bot${BOT_API_KEY}/sendMessage`,
+        params.toString()
+      )
+      .then((res) => {
+        resposta = res;
+      })
+      .catch((error) => {
+        console.error(error);
+        resposta = error;
       });
 
-      const params = new URLSearchParams({ chat_id: "-641112367", text: message });
-
-      axios
-        .post(
-          `https://api.telegram.org/bot${BOT_API_KEY}/sendMessage`,
-          params.toString()
-        )
-        .then((res) => {
-          console.log({ res });
-        })
-        .catch((error) => {
-          console.error(error);
-        });
-
-      res.status(200).json({ mensagem: "Seja bem vindo meu amigo(a)" });
-    });
+    res.status(200).json({ resposta });
+  });
 });
 
 app.listen(PORT, () => console.log("programa iniciou"));
