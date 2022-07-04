@@ -9,7 +9,11 @@ const app = express();
 app.use(express.json());
 app.use(express.static("public"));
 
-app.get("/", async function (req, res, next) {
+app.get("/", function(req, res){
+  return res.status(200).json({message: "I am waking up !!"})
+});
+
+app.get("/send-classes-link", async function (req, res, next) {
   try {
     const date = new Date();
     const today = date.getDay();
