@@ -8,6 +8,7 @@ const DATE_MAP = require("./utils/constants");
 const app = express();
 const cron = require("node-cron");
 const bomURL = "https://book-of-mormon-api.vercel.app/random";
+
 app.use(express.json());
 app.use(express.static("public"));
 
@@ -27,7 +28,10 @@ cron.schedule(
 
       if (weekDay === "domingo" || "segunda") {
         const msg = `Hoje não temos aulas no Instituto, mas eu gostaria de desejar a você uma excelente semana ! 🚀🚀🚀🚀`;
-        const sentMessage = await sendTelegramMessage({message: msg, chatId: "2031174613"});
+        const sentMessage = await sendTelegramMessage({
+          message: msg,
+          chatId: "2031174613",
+        });
 
         console.log(`Sent message was: ${sentMessage.text}`);
       }
@@ -46,8 +50,9 @@ cron.schedule(
 );
 
 cron.schedule(
-  "30 22 * * *",
+  "0 9 * * *",
   async () => {
+    console.log("Get today's random b.o.m verse and sends it to a specific telegram chat at 9am every day")
     const { data } = await axios.get(bomURL);
 
     if (data) {
