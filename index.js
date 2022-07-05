@@ -13,20 +13,22 @@ app.use(express.json());
 app.use(express.static("public"));
 
 app.get("/", function (req, res) {
-  return res.status(200).json({ message: "I am waking up !!" });
+  return res
+    .status(200)
+    .json({ message: "I am waking up !! I feel it in my bones !!" });
 });
 
 cron.schedule(
-  "0 9 * * *",
+  "30 8 * * *",
   async () => {
-    console.log("Sending telegram message at 8am every day");
+    console.log("Sending classes reminder message at 8:30am every day");
 
     try {
       const date = new Date();
       const today = date.getDay();
       const weekDay = DATE_MAP[today];
 
-      if (weekDay === "domingo" || weekDay === "segunda") {
+      if (["domingo", "segunda"].includes(weekDay)) {
         const msg = `Hoje não temos aulas no Instituto, mas eu gostaria de desejar a você uma excelente semana ! 🚀🚀🚀🚀`;
         const sentMessage = await sendTelegramMessage({
           message: msg,
@@ -41,9 +43,8 @@ cron.schedule(
       const message = createMessage(classList, weekDay);
 
       if (message) {
-        await sendTelegramMessage(message);
+        await sendTelegramMessage({ message, chatId: "2031174613" });
       }
-      
     } catch (error) {
       throw new Error("Error while sending telegram message");
     }
@@ -54,7 +55,9 @@ cron.schedule(
 cron.schedule(
   "0 9 * * *",
   async () => {
-    console.log("Get today's random b.o.m verse and sends it to a specific telegram chat at 9am every day")
+    console.log(
+      "Get today's random b.o.m verse and sends it to a specific telegram chat at 9am every day"
+    );
     const { data } = await axios.get(bomURL);
 
     if (data) {
