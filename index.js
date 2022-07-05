@@ -6,43 +6,44 @@ const BOT_API_KEY = process.env.BOT_API_KEY;
 const axios = require("axios");
 const DATE_MAP = require("./utils/constants");
 const app = express();
+const cron = require("node-cron");
+
 app.use(express.json());
 app.use(express.static("public"));
 
-app.get("/", function(req, res){
-  return res.status(200).json({message: "I am waking up !!"})
+app.get("/", function (req, res) {
+  return res.status(200).json({ message: "I am waking up !!" });
 });
 
-app.get("/send-classes-link", async function (req, res, next) {
-  try {
-    const date = new Date();
-    const today = date.getDay();
-    const weekDay = DATE_MAP[today];
+cron.schedule(
+  "0 8 * * *",
+  async () => {
+    console.log("Sending telegram message at 8am every day");
 
-    if (weekDay === "domingo" || "segunda") {
-      const msg = `Hoje não temos aulas no Instituto, mas eu gostaria de desejar a você uma excelente semana ! 🚀🚀🚀🚀`;
-      const sentMessage = await sendTelegramMessage(msg);
+    try {
+      const date = new Date();
+      const today = date.getDay();
+      const weekDay = DATE_MAP[today];
 
-      return res
-        .status(200)
-        .json({ message: `Sent message was: ${sentMessage.text}` });
+      if (weekDay === "domingo" || "segunda") {
+        const msg = `Hoje não temos aulas no Instituto, mas eu gostaria de desejar a você uma excelente semana ! 🚀🚀🚀🚀`;
+        const sentMessage = await sendTelegramMessage(msg);
+
+        console.log(`Sent message was: ${sentMessage.text}`);
+      }
+
+      const classList = await axios.get(BASE_URL);
+      const message = createMessage(classList, weekDay);
+
+      if (message) {
+        await sendTelegramMessage(message);
+      }
+    } catch (error) {
+      throw new Error("Error while sending telegram message");
     }
-
-    let response = "Error sending Telegram message";
-
-    const classList = await axios.get(BASE_URL);
-    const message = createMessage(classList, weekDay);
-
-    if (message) {
-      const returnedMessage = await sendTelegramMessage(message);
-      if (returnedMessage) response = "Telegram message sent succesfully";
-    }
-
-    return res.status(200).json({ message: response });
-  } catch (error) {
-    next(error);
-  }
-});
+  },
+  { timezone: "America/Sao_Paulo" }
+);
 
 const sendTelegramMessage = async (message) => {
   const params = new URLSearchParams({
