@@ -26,7 +26,7 @@ cron.schedule(
       const today = date.getDay();
       const weekDay = DATE_MAP[today];
 
-      if (weekDay === "domingo" || "segunda") {
+      if (weekDay === "domingo" || weekDay === "segunda") {
         const msg = `Hoje não temos aulas no Instituto, mas eu gostaria de desejar a você uma excelente semana ! 🚀🚀🚀🚀`;
         const sentMessage = await sendTelegramMessage({
           message: msg,
@@ -34,6 +34,7 @@ cron.schedule(
         });
 
         console.log(`Sent message was: ${sentMessage.text}`);
+        return sentMessage;
       }
 
       const classList = await axios.get(BASE_URL);
