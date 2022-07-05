@@ -46,7 +46,7 @@ cron.schedule(
 );
 
 cron.schedule(
-  "29 22 * * *",
+  "30 22 * * *",
   async () => {
     const { data } = await axios.get(bomURL);
 
