@@ -17,7 +17,7 @@ app.get("/", function (req, res) {
 });
 
 cron.schedule(
-  "0 8 * * *",
+  "0 9 * * *",
   async () => {
     console.log("Sending telegram message at 8am every day");
 
@@ -43,6 +43,7 @@ cron.schedule(
       if (message) {
         await sendTelegramMessage(message);
       }
+      
     } catch (error) {
       throw new Error("Error while sending telegram message");
     }
