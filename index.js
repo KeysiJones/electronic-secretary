@@ -7,7 +7,7 @@ const axios = require("axios");
 const DATE_MAP = require("./utils/constants");
 const app = express();
 const cron = require("node-cron");
-
+const bomURL = "https://book-of-mormon-api.vercel.app/random";
 app.use(express.json());
 app.use(express.static("public"));
 
@@ -27,7 +27,7 @@ cron.schedule(
 
       if (weekDay === "domingo" || "segunda") {
         const msg = `Hoje não temos aulas no Instituto, mas eu gostaria de desejar a você uma excelente semana ! 🚀🚀🚀🚀`;
-        const sentMessage = await sendTelegramMessage(msg);
+        const sentMessage = await sendTelegramMessage({message: msg, chatId: "2031174613"});
 
         console.log(`Sent message was: ${sentMessage.text}`);
       }
@@ -45,9 +45,26 @@ cron.schedule(
   { timezone: "America/Sao_Paulo" }
 );
 
-const sendTelegramMessage = async (message) => {
+cron.schedule(
+  "18 22 * * *",
+  async () => {
+    const { data } = await axios.get(bomURL);
+
+    if (data) {
+      const preparedMessage = `VERSE OF THE DAY: \n\n${data.text}\n\n- ${data.reference}`;
+      const sentMessage = await sendTelegramMessage({
+        message: preparedMessage,
+      });
+
+      console.log(`Sent message: ${sentMessage}`);
+    }
+  },
+  { timezone: "America/Sao_Paulo" }
+);
+
+const sendTelegramMessage = async ({ message, chatId = "-641112367" }) => {
   const params = new URLSearchParams({
-    chat_id: "-641112367",
+    chat_id: chatId,
     text: message,
   });
 
