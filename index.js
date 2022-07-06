@@ -121,7 +121,7 @@ const createMessage = (classList, weekDay) => {
   }
 };
 
-app.post("/get-updates", function (req, res) {
+app.post("/get-updates", async function (req, res) {
 
   const receivedMessage = req.body.message;
   
