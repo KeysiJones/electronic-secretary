@@ -121,4 +121,16 @@ const createMessage = (classList, weekDay) => {
   }
 };
 
+app.get("/get-updates", function (req, res) {
+  
+  const receivedMessage = req.body.message;
+  const chat = receivedMessage.chat
+
+  await sendTelegramMessage({ message: "Essa mensagem eh automatica porque voce me mandou uma mensagem", chatId: chat.id });
+
+  return res
+    .status(200)
+    .json({ message: "Trying to receive messages here !" });
+});
+
 app.listen(PORT, () => console.log("Program has started"));
