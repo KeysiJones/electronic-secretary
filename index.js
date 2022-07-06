@@ -126,9 +126,9 @@ app.post("/get-updates", async function (req, res) {
   const receivedMessage = req.body.message;
   
   if(receivedMessage) {
-    const { chat } = receivedMessage.chat
+    const { first_name } = receivedMessage.chat
     console.log({receivedMessage})
-    await sendTelegramMessage({ message: `Oi, ${chat.first_name}, essa resposta eh automatica`, chatId: chat.id });
+    await sendTelegramMessage({ message: `Oi, ${first_name}, essa resposta eh automatica`, chatId: chat.id });
   }
   
   return res
