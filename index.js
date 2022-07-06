@@ -18,6 +18,18 @@ app.get("/", function (req, res) {
     .json({ message: "I am waking up !! I feel it in my bones !!" });
 });
 
+app.get("/get-updates", function (req, res) {
+  
+  const receivedMessage = req.body.message;
+  const chat = receivedMessage.chat
+
+  await sendTelegramMessage({ message: "Essa mensagem eh automatica porque voce me mandou uma mensagem", chatId: chat.id });
+
+  return res
+    .status(200)
+    .json({ message: "Trying to receive messages here !" });
+});
+
 cron.schedule(
   "30 8 * * *",
   async () => {
