@@ -126,14 +126,11 @@ app.post("/get-updates", function (req, res) {
   const receivedMessage = req.body.message;
   
   if(receivedMessage) {
-    const chat = receivedMessage.chat
-    const text = receivedMessage.text
+    const { chat } = receivedMessage.chat
     console.log({receivedMessage})
-    console.log({chat, text})
+    await sendTelegramMessage({ message: `Oi, ${chat.first_name}, essa resposta eh automatica`, chatId: chat.id });
   }
   
-  // await sendTelegramMessage({ message: "Essa mensagem eh automatica porque voce me mandou uma mensagem", chatId: chat.id });
-
   return res
     .status(200)
     .json({ message: "Trying to receive messages here !" });
