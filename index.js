@@ -121,12 +121,13 @@ const createMessage = (classList, weekDay) => {
   }
 };
 
-app.get("/get-updates", function (req, res) {
-  
-  const receivedMessage = req.body.message;
-  const chat = receivedMessage.chat
+app.post("/get-updates", function (req, res) {
 
-  await sendTelegramMessage({ message: "Essa mensagem eh automatica porque voce me mandou uma mensagem", chatId: chat.id });
+  console.log({reqBody: req.body})
+  // const receivedMessage = req.body.message;
+  // const chat = receivedMessage.chat
+
+  // await sendTelegramMessage({ message: "Essa mensagem eh automatica porque voce me mandou uma mensagem", chatId: chat.id });
 
   return res
     .status(200)
