@@ -1,21 +1,24 @@
 const express = require("express");
+const cron = require("node-cron");
+const axios = require("axios");
+const DATE_MAP = require("./utils/constants");
+const moment = require('moment-timezone');
 require("dotenv").config();
 const PORT = process.env.PORT || 3001;
 const BASE_URL = process.env.REACT_APP_BASE_URL;
 const BOT_API_KEY = process.env.BOT_API_KEY;
-const axios = require("axios");
-const DATE_MAP = require("./utils/constants");
 const app = express();
-const cron = require("node-cron");
 const bomURL = "https://book-of-mormon-api.vercel.app/random";
 
 app.use(express.json());
 app.use(express.static("public"));
 
-app.get("/", function (req, res) {
+app.get("/", async function (req, res) {
+  const weekDay = DATE_MAP[moment.tz('America/Sao_Paulo').toDate().getDay()];
+  
   return res
     .status(200)
-    .json({ message: "I am waking up !! I feel it in my bones !!" });
+    .json({ message: `I am waking up !! I feel it in my bones !! \n\nDia da semana: ${weekDay}` });
 });
 
 cron.schedule(
@@ -116,7 +119,7 @@ app.post("/get-updates", async function (req, res) {
 });
 
 const sendClassesLinkMessage = async ({ chatId = "2031174613" }) => {
-  const date = new Date();
+  const date = moment.tz('America/Sao_Paulo').toDate()
   const today = date.getDay();
   const weekDay = DATE_MAP[today];
 
@@ -137,7 +140,7 @@ const sendClassesLinkMessage = async ({ chatId = "2031174613" }) => {
   if (message) {
     const sentMessage = await sendTelegramMessage({
       message,
-      chatId: "2031174613",
+      chatId,
     });
     return sentMessage;
   } else {
