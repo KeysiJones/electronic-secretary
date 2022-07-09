@@ -13,7 +13,7 @@ const bomURL = "https://book-of-mormon-api.vercel.app/random";
 app.use(express.json());
 app.use(express.static("public"));
 
-app.get("/", async function (req, res) {
+app.get("/", function (req, res) {
   const weekDay = DATE_MAP[moment.tz('America/Sao_Paulo').toDate().getDay()];
   
   return res
