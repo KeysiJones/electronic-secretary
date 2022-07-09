@@ -24,7 +24,7 @@ cron.schedule(
     console.log("Sending classes reminder message at 8:30am every day");
 
     try {
-      sendClassesLinkMessage()
+      sendClassesLinkMessage();
     } catch (error) {
       throw new Error("Error while sending telegram message");
     }
@@ -92,8 +92,9 @@ const createMessage = (classList, weekDay) => {
         Link da Matrícula 👉 https://forms.gle/D3CYCXJe19PuftgG9 👈\n`;
 
     todayClasses.forEach((currentClass) => {
-      message += `\n🕓 ${currentClass.horario
-        } - ${currentClass.nome.toUpperCase()}\n${currentClass.link}\nSenha:1\n`;
+      message += `\n🕓 ${
+        currentClass.horario
+      } - ${currentClass.nome.toUpperCase()}\n${currentClass.link}\nSenha:1\n`;
     });
 
     return message;
@@ -104,16 +105,14 @@ app.post("/get-updates", async function (req, res) {
   const receivedMessage = req.body.message;
 
   if (receivedMessage) {
-    const { first_name, id } = receivedMessage.chat
+    const { first_name, id } = receivedMessage.chat;
 
-    if (receivedMessage.text === '/getlinks') {
+    if (receivedMessage.text === "/getlinks") {
       await sendClassesLinkMessage({ chatId: id });
     }
   }
 
-  return res
-    .status(200)
-    .json({ message: "Trying to receive messages here !" });
+  return res.status(200).json({ message: "Trying to receive messages here !" });
 });
 
 const sendClassesLinkMessage = async ({ chatId = "2031174613" }) => {
@@ -136,9 +135,19 @@ const sendClassesLinkMessage = async ({ chatId = "2031174613" }) => {
   const message = createMessage(classList, weekDay);
 
   if (message) {
-    const sentMessage = await sendTelegramMessage({ message, chatId: "2031174613" });
+    const sentMessage = await sendTelegramMessage({
+      message,
+      chatId: "2031174613",
+    });
     return sentMessage;
+  } else {
+    const sentMessage = await sendTelegramMessage({
+      message: `Por alguma razão a mensagem das aulas do dia não foi enviada. \n\nDia da semana captado: ${weekDay}`,
+      chatId: "2031174613",
+    });
+
+    return sentMessage
   }
-}
+};
 
 app.listen(PORT, () => console.log("Program has started"));
