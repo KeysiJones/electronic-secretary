@@ -24,27 +24,7 @@ cron.schedule(
     console.log("Sending classes reminder message at 8:30am every day");
 
     try {
-      const date = new Date();
-      const today = date.getDay();
-      const weekDay = DATE_MAP[today];
-
-      if (["domingo", "segunda"].includes(weekDay)) {
-        const msg = `Hoje não temos aulas no Instituto, mas eu gostaria de desejar a você uma excelente semana ! 🚀🚀🚀🚀`;
-        const sentMessage = await sendTelegramMessage({
-          message: msg,
-          chatId: "2031174613",
-        });
-
-        console.log(`Sent message was: ${sentMessage.text}`);
-        return sentMessage;
-      }
-
-      const classList = await axios.get(BASE_URL);
-      const message = createMessage(classList, weekDay);
-
-      if (message) {
-        await sendTelegramMessage({ message, chatId: "2031174613" });
-      }
+      sendClassesLinkMessage()
     } catch (error) {
       throw new Error("Error while sending telegram message");
     }
@@ -112,9 +92,8 @@ const createMessage = (classList, weekDay) => {
         Link da Matrícula 👉 https://forms.gle/D3CYCXJe19PuftgG9 👈\n`;
 
     todayClasses.forEach((currentClass) => {
-      message += `\n🕓 ${
-        currentClass.horario
-      } - ${currentClass.nome.toUpperCase()}\n${currentClass.link}\nSenha:1\n`;
+      message += `\n🕓 ${currentClass.horario
+        } - ${currentClass.nome.toUpperCase()}\n${currentClass.link}\nSenha:1\n`;
     });
 
     return message;
@@ -122,18 +101,44 @@ const createMessage = (classList, weekDay) => {
 };
 
 app.post("/get-updates", async function (req, res) {
-
   const receivedMessage = req.body.message;
-  
-  if(receivedMessage) {
+
+  if (receivedMessage) {
     const { first_name, id } = receivedMessage.chat
-    console.log({receivedMessage})
-    await sendTelegramMessage({ message: `Oi, ${first_name}, essa resposta eh automatica`, chatId: id });
+
+    if (receivedMessage.text === '/getlinks') {
+      await sendClassesLinkMessage({ chatId: id });
+    }
   }
-  
+
   return res
     .status(200)
     .json({ message: "Trying to receive messages here !" });
 });
+
+const sendClassesLinkMessage = async ({ chatId = "2031174613" }) => {
+  const date = new Date();
+  const today = date.getDay();
+  const weekDay = DATE_MAP[today];
+
+  if (["domingo", "segunda"].includes(weekDay)) {
+    const msg = `Hoje não temos aulas no Instituto, mas eu gostaria de desejar a você uma excelente semana ! 🚀🚀🚀🚀`;
+    const sentMessage = await sendTelegramMessage({
+      message: msg,
+      chatId,
+    });
+
+    console.log(`Sent message was: ${sentMessage.text}`);
+    return sentMessage;
+  }
+
+  const classList = await axios.get(BASE_URL);
+  const message = createMessage(classList, weekDay);
+
+  if (message) {
+    const sentMessage = await sendTelegramMessage({ message, chatId: "2031174613" });
+    return sentMessage;
+  }
+}
 
 app.listen(PORT, () => console.log("Program has started"));
