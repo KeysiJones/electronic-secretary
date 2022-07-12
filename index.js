@@ -118,7 +118,8 @@ app.post("/get-updates", async function (req, res) {
   return res.status(200).json({ message: "Trying to receive messages here !" });
 });
 
-const sendClassesLinkMessage = async ({ chatId = "2031174613" }) => {
+const sendClassesLinkMessage = async (params = { chatId: "2031174613" }) => {
+  const { chatId } = params; 
   const date = moment.tz('America/Sao_Paulo').toDate()
   const today = date.getDay();
   const weekDay = DATE_MAP[today];
