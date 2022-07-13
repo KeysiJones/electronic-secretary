@@ -38,18 +38,11 @@ cron.schedule(
 cron.schedule(
   "0 9 * * *",
   async () => {
-    console.log(
-      "Get today's random b.o.m verse and sends it to a specific telegram chat at 9am every day"
-    );
-    const { data } = await axios.get(bomURL);
-
-    if (data) {
-      const preparedMessage = `VERSE OF THE DAY: \n\n${data.text}\n\n- ${data.reference}`;
-      const sentMessage = await sendTelegramMessage({
-        message: preparedMessage,
-      });
-
-      console.log(`Sent message: ${sentMessage}`);
+    console.log("Sending random b.o.m verse at 9am every day");
+    try {
+      sendRandomBOMVerse();
+    } catch (error) {
+      throw new Error(error);
     }
   },
   { timezone: "America/Sao_Paulo" }
@@ -113,6 +106,10 @@ app.post("/get-updates", async function (req, res) {
     if (receivedMessage.text === "/getlinks") {
       await sendClassesLinkMessage({ chatId: id });
     }
+
+    if (receivedMessage.text === "/randomverse") {
+      sendRandomBOMVerse({ chatId: id });
+    }
   }
 
   return res.status(200).json({ message: "Trying to receive messages here !" });
@@ -153,5 +150,24 @@ const sendClassesLinkMessage = async (params = { chatId: "2031174613" }) => {
     return sentMessage
   }
 };
+
+const sendRandomBOMVerse = async (params = { chatId: "-641112367"}) => {
+  const { chatId } = params;
+  const { data } = await axios.get(bomURL);
+
+  if (data) {
+    const preparedMessage = `VERSE OF THE DAY: \n\n${data.text}\n\n- ${data.reference}`;
+    const sentMessage = await sendTelegramMessage({
+      message: preparedMessage,
+      chatId
+    });
+
+    console.log(`Sent message: ${sentMessage.text}`);
+
+    return sentMessage;
+  }
+
+  throw new Error("Error while sending random BOM verse");
+}
 
 app.listen(PORT, () => console.log("Program has started"));
