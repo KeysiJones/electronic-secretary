@@ -102,14 +102,20 @@ app.post("/get-updates", async function (req, res) {
 
   if (receivedMessage) {
     const { first_name, id } = receivedMessage.chat;
-
-    if (receivedMessage.text === "/getlinks") {
-      await sendClassesLinkMessage({ chatId: id });
-    }
-
-    if (receivedMessage.text === "/randomverse") {
-      sendRandomBOMVerse({ chatId: id });
-    }
+  
+    switch(receivedMessage.text) {
+      case "/getlinks":
+        await sendClassesLinkMessage({ chatId: id })
+        break;
+      case "/randomverse":
+        await sendRandomBOMVerse({ chatId: id })
+        break;
+      case "/randomphrase": 
+        await sendRandomPhrase()
+        break;
+      default:
+        await sendTelegramMessage({message: `${first_name ? `${first_name}, ` : ""}por favor, use uma das opções disponíveis no menu.`, chatId: id})
+    }    
   }
 
   return res.status(200).json({ message: "Trying to receive messages here !" });
@@ -168,6 +174,25 @@ const sendRandomBOMVerse = async (params = { chatId: "-641112367"}) => {
   }
 
   throw new Error("Error while sending random BOM verse");
+}
+
+const sendRandomPhrase = async (params = {chatId: "2031174613"}) => {
+  const { chatId } = params;
+  const { data } = await axios.get("https://positive-vibes-api.herokuapp.com/quotes/random");
+
+  if (data) {
+    const message = data.data;
+    const sentMessage = await sendTelegramMessage({
+      message,
+      chatId
+    })
+
+    console.log(`Sent message: ${sentMessage.text}`);
+
+    return sentMessage.text;
+  }
+
+  throw new Error("Error while sending random phrase");
 }
 
 app.listen(PORT, () => console.log("Program has started"));
