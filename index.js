@@ -21,32 +21,36 @@ app.get("/", function (req, res) {
     .json({ message: `I am waking up !! I feel it in my bones !! \n\nDia da semana: ${weekDay}` });
 });
 
-cron.schedule(
-  "30 8 * * *",
-  async () => {
-    console.log("Sending classes reminder message at 8:30am every day");
-
-    try {
-      sendClassesLinkMessage();
-    } catch (error) {
-      throw new Error("Error while sending telegram message");
-    }
-  },
-  { timezone: "America/Sao_Paulo" }
-);
-
-cron.schedule(
-  "0 9 * * *",
-  async () => {
-    console.log("Sending random b.o.m verse at 9am every day");
-    try {
-      sendRandomBOMVerse();
-    } catch (error) {
-      throw new Error(error);
-    }
-  },
-  { timezone: "America/Sao_Paulo" }
-);
+try {
+  cron.schedule(
+    "30 8 * * *",
+    async () => {
+      console.log("Sending classes reminder message at 8:30am every day");
+  
+      try {
+        sendClassesLinkMessage();
+      } catch (error) {
+        throw new Error("Error while sending telegram message");
+      }
+    },
+    { timezone: "America/Sao_Paulo" }
+  );
+  
+  cron.schedule(
+    "0 9 * * *",
+    async () => {
+      console.log("Sending random b.o.m verse at 9am every day");
+      try {
+        sendRandomBOMVerse();
+      } catch (error) {
+        throw new Error(error);
+      }
+    },
+    { timezone: "America/Sao_Paulo" }
+  );
+} catch (error) {
+  throw error;
+}
 
 const sendTelegramMessage = async ({ message, chatId = "-641112367" }) => {
   const params = new URLSearchParams({
@@ -98,24 +102,28 @@ const createMessage = (classList, weekDay) => {
 };
 
 app.post("/get-updates", async function (req, res) {
-  const receivedMessage = req.body.message;
-
-  if (receivedMessage) {
-    const { first_name, id } = receivedMessage.chat;
+  try {
+    const receivedMessage = req.body.message;
   
-    switch(receivedMessage.text) {
-      case "/getlinks":
-        await sendClassesLinkMessage({ chatId: id })
-        break;
-      case "/randomverse":
-        await sendRandomBOMVerse({ chatId: id })
-        break;
-      case "/randomphrase": 
-        await sendRandomPhrase()
-        break;
-      default:
-        await sendTelegramMessage({message: `${first_name ? `${first_name}, ` : ""}por favor, use uma das opções disponíveis no menu.`, chatId: id})
-    }    
+    if (receivedMessage) {
+      const { first_name, id } = receivedMessage.chat;
+    
+      switch(receivedMessage.text) {
+        case "/getlinks":
+          await sendClassesLinkMessage({ chatId: id })
+          break;
+        case "/randomverse":
+          await sendRandomBOMVerse({ chatId: id })
+          break;
+        case "/randomphrase": 
+          await sendRandomPhrase()
+          break;
+        default:
+          await sendTelegramMessage({message: `${first_name ? `${first_name}, ` : ""}por favor, use uma das opções disponíveis no menu.`, chatId: id})
+      }    
+    }
+  } catch (error) {
+    throw error;
   }
 
   return res.status(200).json({ message: "Trying to receive messages here !" });
